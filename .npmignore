@@ -1,0 +1,6 @@
+build/
+src/
+public/
+.idea/
+META-INF/
+test.js
