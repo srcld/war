@@ -1,11 +1,20 @@
 const fs = require('fs');
 const archiver = require('archiver');
 
+const tempBuildFolder = './build-tmp';
+
+const log = function (text, level = 'i') {
+    const now = new Date().toISOString();
+    const messageData = [now, level, text];
+    console.log(messageData.join(' : '));
+}
+
 const createFolderIfNotPresent = function (dir) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 }
 
-const createManifest = function (array = [], dir = './META-INF', name = 'MANIFEST.MF') {
+const createManifest = function (array = [], dir = '/META-INF', name = 'MANIFEST.MF') {
+    dir = tempBuildFolder + dir;
     createFolderIfNotPresent(dir);
 
     const data = array.map((o) => {
@@ -16,7 +25,7 @@ const createManifest = function (array = [], dir = './META-INF', name = 'MANIFES
 }
 
 const logLine = function (num = 25) {
-    console.log('-'.repeat(num));
+    log('-'.repeat(num));
 };
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -31,12 +40,12 @@ const createArchive = function (name, folder, sources = [], format = 'zip', endi
     return new Promise(async (resolve) => {
         // check quickstart -> https://www.npmjs.com/package/archiver
         output.on('close', () => {
-            console.log(archive.pointer() + ' total bytes');
+            log(archive.pointer() + ' total bytes');
             resolve({fullPath, fileName, path});
         });
 
         output.on('end', function () {
-            console.log('Data has been drained');
+            log('Data has been drained');
         });
 
         archive.on('warning', function (err) {
@@ -56,7 +65,7 @@ const createArchive = function (name, folder, sources = [], format = 'zip', endi
         for (let sourceCfg of sources) {
             let {source, target} = sourceCfg || {};
             if (typeof source !== 'undefined' && typeof target !== 'undefined') {
-                console.log('ADDING: ' + source + ' : ' + target);
+                log('ADDING: ' + source + ' : ' + target);
                 archive.directory(source, target);
                 await wait(20)
 
@@ -78,25 +87,37 @@ const createArchive = function (name, folder, sources = [], format = 'zip', endi
 
 }
 
+const build = function (name, targetFolder, sources, manifestArray = []) {
+    createFolderIfNotPresent('./build-tmp')
+    logLine();
+    if (manifestArray.length) {
+        log('CREATING MANIFEST')
+        createManifest(manifestArray);
+        sources.push({
+            source: tempBuildFolder,
+            target: false
+        })
+        sources.reverse();
+    } else {
+        log('NO MANIFEST DATA FOUND.')
+    }
+    log('CREATING ARCHIVE')
+    logLine();
+    return createArchive(name, targetFolder, sources).then((success) => {
+        logLine();
+        log(success ? 'DONE.' : 'BUILD FAILED.')
+        return success;
+    });
+};
+
+const buildByConfig = function (config = {}) {
+    const {name, targetFolder, sources, manifestArray} = config;
+    return build(name, targetFolder, sources, manifestArray);
+}
+
 module.exports = {
-    buildByConfig: function (cfg = {}) {
-        const {name, targetFolder, sources, manifestArray} = cfg;
-        return this.build(name, targetFolder, sources, manifestArray);
-    },
-    build: function (name, targetFolder, sources, manifestArray = []) {
-        logLine();
-        if (manifestArray.length) {
-            console.log('CREATING MANIFEST')
-            createManifest(manifestArray);
-        }
-        console.log('CREATING ARCHIVE')
-        logLine();
-        return createArchive(name, targetFolder, sources).then((success) => {
-            logLine();
-            console.log(success ? 'DONE.' : 'BUILD FAILED.')
-            return success;
-        });
-    },
+    buildByConfig,
+    build,
     createManifest,
     createArchive
 }
