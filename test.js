@@ -1,6 +1,6 @@
 const war = require('./index')
 
-let manifestData = [{
+let manifestArray = [{
     key: 'Manifest-Version', value: '1.0'
 }, {
     key: 'Bundle-SymbolicName', value: 'Sourcloud Data Services'
@@ -18,12 +18,22 @@ let manifestData = [{
     key: 'Bundle-ManifestVersion', value: '2'
 }]
 
-let folders = [{
-    source: 'build/srcldds',
-    target: false
-}, {
-    source: 'META-INF',
-    target: 'META-INF'
-}]
+let sources = [
+    // {
+    //     source: 'build/srcldds',
+    //     target: false
+    // }
+]
 
-war.build('srcldds', 'build', folders, manifestData);
+const buildConfig = {
+    name: 'srcldds',
+    targetFolder: 'build',
+    sources,
+    manifestArray
+}
+
+war.buildByConfig(buildConfig)
+    .then((success) => {
+        console.log('FINISHED.');
+        console.log(success); // fullPath, fileName
+    });

@@ -116,6 +116,7 @@ const buildByConfig = function (config = {}) {
 }
 
 module.exports = {
+    createFolderIfNotPresent,
     buildByConfig,
     build,
     createManifest,
