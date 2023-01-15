@@ -21,6 +21,9 @@ const createManifest = function (array = [], dir = '/META-INF', name = 'MANIFEST
         return o.key + ': ' + o.value;
     }).join('\n');
 
+    const logMessage = 'MANIFEST CREATED\n' + data;
+    log(logMessage);
+
     fs.writeFileSync([dir, name].join('/'), data);
 }
 
