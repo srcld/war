@@ -29,7 +29,8 @@ const buildConfig = {
     name: 'srcldds',
     targetFolder: 'build',
     sources,
-    manifestArray
+    manifestArray,
+    clean: true
 }
 
 war.buildByConfig(buildConfig)
